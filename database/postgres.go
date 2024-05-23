@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/f3rcho/rest-posts/models"
+	_ "github.com/lib/pq"
 )
 
 type PostgresRepository struct {
@@ -25,7 +26,7 @@ func (p *PostgresRepository) InsertUser(ctx context.Context, user *models.User) 
 	return err
 }
 
-func (p *PostgresRepository) GetUserByID(ctx context.Context, ID int64) (*models.User, error) {
+func (p *PostgresRepository) GetUserByID(ctx context.Context, ID string) (*models.User, error) {
 	rows, err := p.db.QueryContext(ctx, "SELECT id, email FROM users WHERE id = $s1", ID)
 	defer func() {
 		err = rows.Close()
