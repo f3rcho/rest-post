@@ -28,7 +28,7 @@ func (b *Broker) Config() *Config {
 	return b.config
 }
 
-func newServer(ctx context.Context, config *Config) (*Broker, error) {
+func NewServer(ctx context.Context, config *Config) (*Broker, error) {
 	if config.Port == "" {
 		return nil, errors.New("port is required")
 	}
@@ -48,11 +48,11 @@ func newServer(ctx context.Context, config *Config) (*Broker, error) {
 }
 
 func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
-	b.router = mux.NewRouter()
 	binder(b, b.router)
-	log.Println("Starting server on port:", b.Config().Port)
+	address := ":" + b.Config().Port
 
-	if err := http.ListenAndServe(b.config.Port, b.router); err != nil {
+	log.Println("Starting server on port:", b.config.Port)
+	if err := http.ListenAndServe(address, b.router); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }
