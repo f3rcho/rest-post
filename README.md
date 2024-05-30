@@ -13,3 +13,9 @@ go get github.com/segmentio/ksuid
 ### docker
 $ docker build . -t rest-db
 $ docker run -p 54321:5432 rest-db
+
+### Encrypt
+go get golang.org/x/crypto/bcrypt
+
+### jwt
+go get github.com/golang-jwt/jwt
