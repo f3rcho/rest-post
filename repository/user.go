@@ -27,7 +27,7 @@ func GetUserByID(ctx context.Context, ID string) (*models.User, error) {
 	return implementation.GetUserByID(ctx, ID)
 }
 func GetUserByEmail(ctx context.Context, Email string) (*models.User, error) {
-	return implementation.GetUserByID(ctx, Email)
+	return implementation.GetUserByEmail(ctx, Email)
 }
 
 func Close() error {
