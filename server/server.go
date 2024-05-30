@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/f3rcho/rest-posts/database"
+	"github.com/f3rcho/rest-posts/repository"
 	"github.com/gorilla/mux"
 )
 
@@ -50,6 +52,12 @@ func NewServer(ctx context.Context, config *Config) (*Broker, error) {
 func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
 	binder(b, b.router)
 	address := ":" + b.Config().Port
+
+	repo, err := database.NewPostGresRepository(b.config.DatabaseUrl)
+	if err != nil {
+		log.Fatalf("Database error: %v", err)
+	}
+	repository.SetRespository(repo)
 
 	log.Println("Starting server on port:", b.config.Port)
 	if err := http.ListenAndServe(address, b.router); err != nil {

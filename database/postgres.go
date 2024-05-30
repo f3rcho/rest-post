@@ -22,12 +22,12 @@ func NewPostGresRepository(url string) (*PostgresRepository, error) {
 }
 
 func (p *PostgresRepository) InsertUser(ctx context.Context, user *models.User) error {
-	_, err := p.db.ExecContext(ctx, "INSERT INTO users (email, password) VALUES ($s1, $s2)", user.Email, user.Password)
+	_, err := p.db.ExecContext(ctx, "INSERT INTO users (id, email, password) VALUES ($1, $2, $3)", user.ID, user.Email, user.Password)
 	return err
 }
 
 func (p *PostgresRepository) GetUserByID(ctx context.Context, ID string) (*models.User, error) {
-	rows, err := p.db.QueryContext(ctx, "SELECT id, email FROM users WHERE id = $s1", ID)
+	rows, err := p.db.QueryContext(ctx, "SELECT id, email FROM users WHERE id = $1", ID)
 	defer func() {
 		err = rows.Close()
 		if err != nil {

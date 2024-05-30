@@ -44,6 +44,7 @@ func SignUpHandler(s server.Server) http.HandlerFunc {
 		err = repository.InsertUser(r.Context(), &user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
