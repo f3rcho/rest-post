@@ -19,3 +19,6 @@ go get golang.org/x/crypto/bcrypt
 
 ### jwt
 go get github.com/golang-jwt/jwt
+
+### webSocket
+go get github.com/gorilla/websocket
