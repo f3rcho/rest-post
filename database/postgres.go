@@ -28,6 +28,9 @@ func (p *PostgresRepository) InsertUser(ctx context.Context, user *models.User) 
 
 func (p *PostgresRepository) GetUserByID(ctx context.Context, ID string) (*models.User, error) {
 	rows, err := p.db.QueryContext(ctx, "SELECT id, email FROM users WHERE id = $1", ID)
+	if err != nil {
+		return nil, err
+	}
 	defer func() {
 		err = rows.Close()
 		if err != nil {
@@ -50,6 +53,9 @@ func (p *PostgresRepository) GetUserByID(ctx context.Context, ID string) (*model
 }
 func (p *PostgresRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	rows, err := p.db.QueryContext(ctx, "SELECT id, email, password FROM users WHERE email = $1", email)
+	if err != nil {
+		return nil, err
+	}
 	defer func() {
 		err = rows.Close()
 		if err != nil {
@@ -72,8 +78,35 @@ func (p *PostgresRepository) GetUserByEmail(ctx context.Context, email string) (
 }
 
 func (p *PostgresRepository) InsertPost(ctx context.Context, post *models.Post) error {
-	_, err := p.db.ExecContext(ctx, "INSERT INTO posts (id, post_content, created_at, user_id) VALUES ($1, $2, $3, $4)", post.Id, post.PostContent, post.CreatedAt, post.UserId)
+	_, err := p.db.ExecContext(ctx, "INSERT INTO posts (id, post_content, user_id) VALUES ($1, $2, $3)", post.Id, post.PostContent, post.UserId)
 	return err
+}
+
+func (p *PostgresRepository) ListPosts(ctx context.Context, pagination *models.PaginationDTO) ([]*models.Post, error) {
+	rows, err := p.db.QueryContext(ctx, "SELECT id, post_content, created_at, user_id FROM posts LIMIT $1 OFFSET $2", pagination.Limit, pagination.Page)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	var posts []*models.Post
+
+	for rows.Next() {
+		var post = models.Post{}
+		if err = rows.Scan(&post.Id, &post.PostContent, &post.CreatedAt, &post.UserId); err == nil {
+			posts = append(posts, &post)
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return posts, nil
+
 }
 
 func (p *PostgresRepository) Close() error {

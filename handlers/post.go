@@ -56,3 +56,19 @@ func InserPost(s server.Server) http.HandlerFunc {
 		})
 	}
 }
+
+func ListPosts(s server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		pageStr := r.URL.Query().Get("page")
+		limitStr := r.URL.Query().Get("limit")
+
+		pagination := utils.Pagination(pageStr, limitStr)
+		posts, err := repository.ListPosts(r.Context(), &pagination)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(posts)
+	}
+}
