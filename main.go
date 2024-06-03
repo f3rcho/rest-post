@@ -37,6 +37,10 @@ func main() {
 	s.Start(BindRoutes)
 }
 
+const (
+	POST_ROUTE = "/posts/{id}"
+)
+
 func BindRoutes(s server.Server, r *mux.Router) {
 	r.Use(middleware.CheckAuth(s))
 	r.Use(middleware.JSONMiddleware)
@@ -46,5 +50,8 @@ func BindRoutes(s server.Server, r *mux.Router) {
 	r.HandleFunc("/login", handlers.LoginHandler(s)).Methods(http.MethodPost)
 	r.HandleFunc("/me", handlers.MeHandler(s)).Methods(http.MethodGet)
 	r.HandleFunc("/posts", handlers.InserPost(s)).Methods(http.MethodPost)
+	r.HandleFunc(POST_ROUTE, handlers.GetPostById(s)).Methods(http.MethodGet)
 	r.HandleFunc("/posts", handlers.ListPosts(s)).Methods(http.MethodGet)
+	r.HandleFunc(POST_ROUTE, handlers.UpdatePost(s)).Methods(http.MethodPut)
+	r.HandleFunc(POST_ROUTE, handlers.DeletePostById(s)).Methods(http.MethodDelete)
 }

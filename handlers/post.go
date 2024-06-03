@@ -8,6 +8,7 @@ import (
 	"github.com/f3rcho/rest-posts/repository"
 	"github.com/f3rcho/rest-posts/server"
 	"github.com/f3rcho/rest-posts/utils"
+	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
 )
 
@@ -18,6 +19,10 @@ type UpsertPostRequest struct {
 type PostResponse struct {
 	Id          string `json:"id"`
 	PostContent string `json:"post_content"`
+}
+
+type MessageResponse struct {
+	Message string `json:"message"`
 }
 
 func InserPost(s server.Server) http.HandlerFunc {
@@ -57,6 +62,36 @@ func InserPost(s server.Server) http.HandlerFunc {
 	}
 }
 
+func GetPostById(s server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		post, err := repository.GetPostById(r.Context(), params["id"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(post)
+	}
+}
+func DeletePostById(s server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		claims, err := utils.GetClaims(s, w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+		}
+
+		err = repository.DeletePostById(r.Context(), params["id"], claims.UserID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(MessageResponse{
+			Message: "Resource deleted",
+		})
+	}
+}
+
 func ListPosts(s server.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pageStr := r.URL.Query().Get("page")
@@ -70,5 +105,34 @@ func ListPosts(s server.Server) http.HandlerFunc {
 			return
 		}
 		json.NewEncoder(w).Encode(posts)
+	}
+}
+
+func UpdatePost(s server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		claims, err := utils.GetClaims(s, w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		var postRequest = UpsertPostRequest{}
+		err = json.NewDecoder(r.Body).Decode(&postRequest)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		post := models.Post{
+			PostContent: postRequest.PostContent,
+			Id:          params["id"],
+		}
+
+		err = repository.UpdatePost(r.Context(), &post, claims.UserID)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(post)
 	}
 }

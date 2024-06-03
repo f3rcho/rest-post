@@ -82,6 +82,41 @@ func (p *PostgresRepository) InsertPost(ctx context.Context, post *models.Post) 
 	return err
 }
 
+func (p *PostgresRepository) GetPostById(ctx context.Context, ID string) (*models.Post, error) {
+	rows, err := p.db.QueryContext(ctx, "SELECT id, post_content, created_at, user_id FROM posts WHERE id = $1", ID)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	var post = models.Post{}
+
+	for rows.Next() {
+		if err = rows.Scan(&post.Id, &post.PostContent, &post.CreatedAt, &post.UserId); err == nil {
+			return &post, nil
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return &post, nil
+}
+
+func (p *PostgresRepository) DeletePostById(ctx context.Context, ID, userID string) error {
+	_, err := p.db.ExecContext(ctx, "DELETE FROM posts WHERE id = $1 and user_id = $2", ID, userID)
+	return err
+}
+
+func (p *PostgresRepository) UpdatePost(ctx context.Context, post *models.Post, userId string) error {
+	_, err := p.db.ExecContext(ctx, "UPDATE posts SET post_content = $1 WHERE id = $2 and user_id = $3", post.PostContent, post.Id, userId)
+	return err
+}
+
 func (p *PostgresRepository) ListPosts(ctx context.Context, pagination *models.PaginationDTO) ([]*models.Post, error) {
 	rows, err := p.db.QueryContext(ctx, "SELECT id, post_content, created_at, user_id FROM posts LIMIT $1 OFFSET $2", pagination.Limit, pagination.Page)
 	if err != nil {
