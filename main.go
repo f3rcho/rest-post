@@ -42,18 +42,20 @@ const (
 )
 
 func BindRoutes(s server.Server, r *mux.Router) {
-	r.Use(middleware.CheckAuth(s))
+	api := r.PathPrefix("/api/v1").Subrouter()
+	api.Use(middleware.CheckAuth(s))
 	r.Use(middleware.JSONMiddleware)
+	api.Use(middleware.JSONMiddleware)
 
 	r.HandleFunc("/", handlers.HomeHandler(s)).Methods(http.MethodGet)
 	r.HandleFunc("/signup", handlers.SignUpHandler(s)).Methods(http.MethodPost)
 	r.HandleFunc("/login", handlers.LoginHandler(s)).Methods(http.MethodPost)
-	r.HandleFunc("/me", handlers.MeHandler(s)).Methods(http.MethodGet)
-	r.HandleFunc("/posts", handlers.InserPost(s)).Methods(http.MethodPost)
-	r.HandleFunc(POST_ROUTE, handlers.GetPostById(s)).Methods(http.MethodGet)
-	r.HandleFunc("/posts", handlers.ListPosts(s)).Methods(http.MethodGet)
-	r.HandleFunc(POST_ROUTE, handlers.UpdatePost(s)).Methods(http.MethodPut)
-	r.HandleFunc(POST_ROUTE, handlers.DeletePostById(s)).Methods(http.MethodDelete)
+	api.HandleFunc("/me", handlers.MeHandler(s)).Methods(http.MethodGet)
+	api.HandleFunc("/posts", handlers.InserPost(s)).Methods(http.MethodPost)
+	api.HandleFunc(POST_ROUTE, handlers.GetPostById(s)).Methods(http.MethodGet)
+	api.HandleFunc("/posts", handlers.ListPosts(s)).Methods(http.MethodGet)
+	api.HandleFunc(POST_ROUTE, handlers.UpdatePost(s)).Methods(http.MethodPut)
+	api.HandleFunc(POST_ROUTE, handlers.DeletePostById(s)).Methods(http.MethodDelete)
 
 	r.HandleFunc("/ws", s.Hub().HandleWebSocket)
 }
