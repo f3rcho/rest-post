@@ -22,3 +22,6 @@ go get github.com/golang-jwt/jwt
 
 ### webSocket
 go get github.com/gorilla/websocket
+
+### CORS
+go get github.com/rs/cors
