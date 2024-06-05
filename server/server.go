@@ -10,6 +10,7 @@ import (
 	"github.com/f3rcho/rest-posts/repository"
 	"github.com/f3rcho/rest-posts/websocket"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 type Config struct {
@@ -60,6 +61,7 @@ func NewServer(ctx context.Context, config *Config) (*Broker, error) {
 func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
 	binder(b, b.router)
 	address := ":" + b.Config().Port
+	handler := cors.Default().Handler(b.router)
 
 	repo, err := database.NewPostGresRepository(b.config.DatabaseUrl)
 	if err != nil {
@@ -68,7 +70,7 @@ func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
 	repository.SetRespository(repo)
 	go b.hub.Run()
 	log.Println("Starting server on port:", b.config.Port)
-	if err := http.ListenAndServe(address, b.router); err != nil {
+	if err := http.ListenAndServe(address, handler); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }
